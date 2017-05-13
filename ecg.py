@@ -10,14 +10,14 @@ class ECG:
     2017 physionet challenge
     """
 
-    def __init__(self, training_path='training2017', validation_path='validation', csvfile='REFERENCE.csv', random_state=69):
+    def __init__(self, training_path='training2017', validation_path='validation', csvfile='REFERENCE.csv', random_state=69, use_all=False):
         self.training_path = training_path
         self.validation_path = validation_path
         self.class_name_to_id = {'N': 0, 'A': 1, 'O': 2, '~': 3}
         self.nclasses = len(self.class_name_to_id.keys())
         self.csvfile = csvfile
+        self.use_all = use_all
         self.random_state = random_state
-
 
         self.X_train = None
         self.Y_train = None
@@ -31,6 +31,11 @@ class ECG:
         # 18170: max validation
         # 18286: max train
         self.maxlen = 18286
+        if self.use_all:
+            self.nfeatures = self.maxlen
+        else:
+            self.nfeatures = self.minlen
+
         self.__init_dataset()
 
 
@@ -42,11 +47,13 @@ class ECG:
 
     def __load_training_data(self):
         self.X_train, self.Y_train = self.__load_data(self.training_path, self.csvfile)
-
+        self.ntrains = self.X_train.shape[0]
+        print 'Train ', self.X_train.shape
 
     def __load_validation_data(self):
         self.X_test, self.Y_test = self.__load_data(self.validation_path, self.csvfile)
         self.ntests = self.X_test.shape[0]
+        print 'Test ', self.X_test.shape
 
     def __load_data(self, path, csvfile):
         X = []
@@ -56,7 +63,14 @@ class ECG:
             for row in ecgreader:
                 val = loadmat(join(path, row[0]))['val']
                 label = row[1]
-                X.append(val[:, 0:self.minlen].reshape(self.minlen))
+                if self.use_all:
+                    x = np.zeros(self.maxlen)
+                    n = val.shape[1]
+                    val = val.reshape(n)
+                    x[0:n] = val
+                    X.append(x)
+                else:
+                    X.append(val[:, 0:self.minlen].reshape(self.minlen))
                 Y.append(self.class_name_to_id[label])
         X = np.asarray(X)
         Y = np.asarray(Y)
@@ -78,7 +92,3 @@ class ECG:
         n, d = self.X_test.shape
         idx = np.random.choice(range(n), batch_size, replace=False)
         return self.X_test[idx, :], self.Y_test[idx]
-
-def testECG():
-    ecg = ECG()
-    ecg.get_mini_batch(25)

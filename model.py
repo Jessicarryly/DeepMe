@@ -20,14 +20,13 @@ def max_pool_2x2(x):
 
 
 class CNN:
-    def __init__(self, ecg, learning_rate=1e-3, epochs=5, batch_size=10, batches=6, dropout=0.75):
+    def __init__(self, ecg, learning_rate=1e-3, epochs=30, batch_size=128, dropout=0.75):
         # init the convolution neural network
         print 'setup convolution neural network'
         self.ecg = ecg
         self.learning_rate = learning_rate
         self.epochs = epochs
         self.batch_size = batch_size
-        self.batches = batches
         self.dropout = dropout
         self.__setup_model()
         self.sess = tf.Session()
@@ -41,9 +40,9 @@ class CNN:
         """
 
         # Input to network
-        self.X = tf.placeholder(tf.float32, [None, self.ecg.minlen], name='X_placeholder')
+        self.X = tf.placeholder(tf.float32, [None, self.ecg.nfeatures], name='X_placeholder')
         self.Y = tf.placeholder(tf.float32, [None, self.ecg.nclasses], name='Y_placeholder')
-        x_image = tf.reshape(self.X, [-1, self.ecg.minlen, 1, 1])
+        x_image = tf.reshape(self.X, [-1, self.ecg.nfeatures, 1, 1])
         
         # 1st conv layer
         W_conv1 = weight_variable([5, 1, 1, 32], 'W_conv1')
@@ -58,9 +57,9 @@ class CNN:
         # h_pool2 = max_pool_2x2(h_conv2)
 
         # 1st fc layer
-        W_fc1 = weight_variable([self.ecg.minlen*32, 1024], 'W_fc1')
+        W_fc1 = weight_variable([self.ecg.nfeatures*32, 1024], 'W_fc1')
         b_fc1 = bias_variable([1024], 'b_fc1')
-        h_conv2_flat = tf.reshape(h_conv2, [-1, self.ecg.minlen*32])
+        h_conv2_flat = tf.reshape(h_conv2, [-1, self.ecg.nfeatures*32])
         h_fc1 = tf.nn.relu(tf.matmul(h_conv2_flat, W_fc1) + b_fc1)
         self.keep_prob = tf.placeholder(tf.float32)
         h_fc1_drop = tf.nn.dropout(h_fc1, self.keep_prob)
@@ -83,15 +82,15 @@ class CNN:
         start = time.time()
         writer = tf.summary.FileWriter('graphs', self.sess.graph)
         self.sess.run(tf.global_variables_initializer())
-
+        batches = self.ecg.ntrains / self.batch_size
         # train
         for i in range(self.epochs):
             loss = 0
-            for j in range(self.batches):
+            for j in range(batches):
                 X_batch, Y_batch = self.ecg.get_train_batch(self.batch_size)
                 _, loss_batch = self.sess.run([self.optimizer, self.loss], feed_dict={self.X: X_batch, self.Y: Y_batch, self.keep_prob: self.dropout})
                 loss += loss_batch
-            print 'Average loss {0}: {1}'.format(i, loss/self.batches)
+            print 'Average loss {0}: {1}'.format(i, loss/batches)
         print 'Total train time {0}'.format(time.time() - start)
         print 'Optimizer finished'
 
@@ -109,8 +108,6 @@ class CNN:
             total_correct_preds += self.sess.run(accuracy)
         print 'Accuracy {0}'.format(total_correct_preds/self.ecg.ntests)
         print 'Total test time {0}'.format(time.time() - start)
-
-    
 
 
 ecg = ECG('training2017')
