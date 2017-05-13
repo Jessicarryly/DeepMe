@@ -10,14 +10,26 @@ $ git clone https://github.com/dattran2346/DeepMe.git
 $ cd DeepMe
 $ wget https://physionet.org/challenge/2017/training2017.zip
 $ unzip training2017
+$ wget https://physionet.org/challenge/2017/sample2017.zip
+$ unzip sample2017
 $ pip install -r requirements.txt
 $ python model.py
 ```
 
 ## Performance
-v0.1: Simple 1 layer logistic regression
+v0.1: Simple 1 layer logistic regression 
 
 <img src=screenshot/v0.1.png width='256' alt='image' />
+
+v0.2: 2 conv + 2 fc layers + feed more data
+
+<img src=screenshot/v0.2.png width='256' alt='image' />
+
+## Inspiration
+
+[DeepHeart physionet challeng 2016](https://github.com/jisaacso/DeepHeart)
+
+[Tensorflow MNIST tutorial](https://www.tensorflow.org/get_started/mnist/pros)
 
 ## License
     Copyright [2017] [Ch4ul3n3]
