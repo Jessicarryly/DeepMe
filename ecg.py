@@ -10,21 +10,20 @@ class ECG:
     2017 physionet challenge
     """
 
-    def __init__(self, basepath='validation', csvfile='REFERENCE.csv', random_state=69):
-        self.basepath = basepath
+    def __init__(self, training_path='training2017', validation_path='validation', csvfile='REFERENCE.csv', random_state=69):
+        self.training_path = training_path
+        self.validation_path = validation_path
         self.class_name_to_id = {'N': 0, 'A': 1, 'O': 2, '~': 3}
         self.nclasses = len(self.class_name_to_id.keys())
         self.csvfile = csvfile
         self.random_state = random_state
 
-        self.X = []
-        self.Y = []
 
-        self.X_train = []
-        self.Y_train = []
+        self.X_train = None
+        self.Y_train = None
 
-        self.X_test = []
-        self.Y_test = []
+        self.X_test = None
+        self.Y_test = None
 
         # 3002: min validation
         # 2714: min training
@@ -37,38 +36,32 @@ class ECG:
 
 
     def __init_dataset(self):
-        self.__load_data()
-        self.__split_data()
+        self.__load_training_data()
+        self.__load_validation_data()
 
 
-    def __load_data(self):
-        with open(join(self.basepath, self.csvfile), 'rb') as file:
+    def __load_training_data(self):
+        self.X_train, self.Y_train = self.__load_data(self.training_path, self.csvfile)
+
+
+    def __load_validation_data(self):
+        self.X_test, self.Y_test = self.__load_data(self.validation_path, self.csvfile)
+        self.ntests = self.X_test.shape[0]
+
+    def __load_data(self, path, csvfile):
+        X = []
+        Y = []
+        with open(join(path, csvfile), 'rb') as file:
             ecgreader = reader(file, delimiter=',')
             for row in ecgreader:
-                self.__parse_data(row)
-    
-        self.X = np.asarray(self.X)
-        self.Y = np.asarray(self.Y)
-        self.Y = np.eye(self.nclasses)[self.Y]
-
-
-    def __parse_data(self, row):
-        val = loadmat(join(self.basepath, row[0]))['val']
-        label = row[1]
-        self.Y.append(self.class_name_to_id[label])
-        self.X.append(val[:,0:self.minlen].reshape(self.minlen))
-
-    def __split_data(self):
-        """
-        Randomly split the data into trainning set and test set
-        """
-
-        self.X_train, self.X_test, self.Y_train, self.Y_test = train_test_split(self.X, self.Y, test_size=0.2, random_state=self.random_state)
-        print 'Train:', self.X_train.shape, self.Y_train.shape
-        print 'Test: ', self.X_test.shape, self.Y_test.shape
-        print 'Whole:', self.X.shape, self.Y.shape
-        self.ntrains = self.X_train.shape[0]
-        self.ntests = self.X_test.shape[0]
+                val = loadmat(join(path, row[0]))['val']
+                label = row[1]
+                X.append(val[:, 0:self.minlen].reshape(self.minlen))
+                Y.append(self.class_name_to_id[label])
+        X = np.asarray(X)
+        Y = np.asarray(Y)
+        Y = np.eye(self.nclasses)[Y]
+        return X, Y
 
     def get_train_batch(self, batch_size):
         """
