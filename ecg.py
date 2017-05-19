@@ -3,6 +3,8 @@ import numpy as np
 from csv import reader
 from scipy.io import loadmat
 from sklearn.cross_validation import train_test_split, check_random_state
+import matplotlib.pyplot as plt
+import gnuplotlib as gp
 
 class ECG:
     """
@@ -107,20 +109,31 @@ class ECG:
 
         return X, Y
 
+    # TODO: extract to utils file
     def __preprocess_data(self, X, Y):
         """
         preprocess the data with fft, filter, pankin tomson, wavelet, whatever work
         """
         return X, Y
 
+
     def __graph_sample_data(self):
         """
         graph for ecg signal present in the validation
         """
-        normal = 'A00001'
-        af = 'A00004'
-        other = 'A00011'
-        noise = 'A00585'
+        self.__plot_mat('A00001', 'Normal', self.validation_path)
+        self.__plot_mat('A00004', 'AF', self.validation_path)
+        self.__plot_mat('A00011', 'Other', self.validation_path)
+        self.__plot_mat('A00585', 'Noise', self.validation_path)
+
+    # TODO: extract to utils file
+    def __plot_mat(self, file, title, path):
+        val = loadmat(join(path, file))['val'][:, 0:self.minlen]
+        gp.plot(val, title=title, xlabel='Time (s)', ylabel='Amplitude (mV)', _with='lines', terminal='dumb 120, 40', unset='grid')
+        # gp.xlabel('Time (s)')
+        # gp.ylabel('Amplitude (mV)')
+        # gp.title(title)
+        # plt.show()
 
     def get_train_batch(self, batch_size):
         """
