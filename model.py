@@ -2,7 +2,9 @@ import tensorflow as tf
 import time
 from ecg import ECG
 
-
+"""
+utility function for constructing the model
+"""
 def weight_variable(shape, name):
         initial = tf.truncated_normal(shape, stddev=0.01)
         return tf.Variable(initial, name=name)
@@ -18,32 +20,44 @@ def max_pool_2x2(x):
     return tf.nn.max_pool(x, ksize=[1, 2, 1, 1], strides=[1, 2, 1, 1], padding='SAME')
 
 
-
+"""
+the model that will perform the training on the dataset
+"""
 class CNN:
-    def __init__(self, ecg, learning_rate=1e-3, epochs=30, batch_size=128, dropout=0.75):
-        # init the convolution neural network
+    def __init__(self, ecg, learning_rate=1e-3, epochs=30, batch_size=128, dropout=0.75, develop=True):
+        """
+         init the convolution neural network
+         ecg: the data model that will provide data for each batch
+         learning_rate: the learning rate to fetch to tensorflow
+         epochs: number of iteration time throught the dataset
+         batch_size: size of batch for each iteration
+         dropout: reduce overfitting
+         develop: if the model is being developed, use a smaller set of data and epochs
+        """
         print 'setup convolution neural network'
         self.ecg = ecg
         self.learning_rate = learning_rate
-        self.epochs = epochs
-        self.batch_size = batch_size
+        if develop:
+            self.epochs = 10
+            self.batch_size = 4
+        else:
+            elf.epochs = epochs
+            self.batch_size = batch_size
         self.dropout = dropout
         self.__setup_model()
         self.sess = tf.Session()
 
     def __setup_model(self):
         """
-        setup all the layer needed, include:
-        2 conv layer [affine - relu - maxpool]
-        2 fc layer [affine -
-
+        setup all the layer needed, following the architecture
+        [affine - relu - maxpool] - [affine - relu] - [fc] - [softmax]
         """
 
         # Input to network
         self.X = tf.placeholder(tf.float32, [None, self.ecg.nfeatures], name='X_placeholder')
         self.Y = tf.placeholder(tf.float32, [None, self.ecg.nclasses], name='Y_placeholder')
         x_image = tf.reshape(self.X, [-1, self.ecg.nfeatures, 1, 1])
-        
+
         # 1st conv layer
         W_conv1 = weight_variable([5, 1, 1, 32], 'W_conv1')
         b_conv1 = bias_variable([32], 'b_conv1')
@@ -77,12 +91,18 @@ class CNN:
         self.optimizer = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss)
 
     def train(self):
+        """
+        start training the model using the setting in init
+        """
+
         print 'start training the cnn'
+
         # setup before train
-        start = time.time()
-        writer = tf.summary.FileWriter('graphs', self.sess.graph)
-        self.sess.run(tf.global_variables_initializer())
-        batches = self.ecg.ntrains / self.batch_size
+        start = time.time() # measure training time
+        writer = tf.summary.FileWriter('graphs', self.sess.graph) # graph to visualize the training better
+        self.sess.run(tf.global_variables_initializer()) # init all variables
+        batches = self.ecg.ntrains / self.batch_size # get the number of batches for each epoch
+
         # train
         for i in range(self.epochs):
             loss = 0
@@ -91,6 +111,8 @@ class CNN:
                 _, loss_batch = self.sess.run([self.optimizer, self.loss], feed_dict={self.X: X_batch, self.Y: Y_batch, self.keep_prob: self.dropout})
                 loss += loss_batch
             print 'Average loss {0}: {1}'.format(i, loss/batches)
+
+        # training finished
         print 'Total train time {0}'.format(time.time() - start)
         print 'Optimizer finished'
 
@@ -110,7 +132,7 @@ class CNN:
         print 'Total test time {0}'.format(time.time() - start)
 
 
-ecg = ECG('training2017')
+ecg = ECG()
 model = CNN(ecg)
 model.train()
 model.test()

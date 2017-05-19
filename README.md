@@ -21,7 +21,7 @@ v0.1: Simple 1 layer logistic regression
 
 <img src=screenshot/v0.1.png width='256' alt='image' />
 
-v0.2: 2 conv + 2 fc layers + feed more data
+v0.2: [affine - relu -pool] - [affine - relu] - [fc] - softmax
 
 <img src=screenshot/v0.2.png width='256' alt='image' />
 
