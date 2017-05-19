@@ -3,8 +3,7 @@ import numpy as np
 from csv import reader
 from scipy.io import loadmat
 from sklearn.cross_validation import train_test_split, check_random_state
-import matplotlib.pyplot as plt
-import gnuplotlib as gp
+from utils import *
 
 class ECG:
     """
@@ -55,7 +54,6 @@ class ECG:
         self.__init_dataset()
 
 
-
     def __init_dataset(self):
         # load training dataset
         self.X_train, self.Y_train = self.__setup_data(self.training_path)
@@ -71,69 +69,23 @@ class ECG:
         self.__graph_sample_data()
 
     def __setup_data(self, path):
-        X, Y = self.__load_data(path, self.csvfile)
-        X, Y = self.__preprocess_data(X, Y)
+        X, Y = load_data(path=path,
+                        csvfile=self.csvfile,
+                        percent=self.percent_data_use,
+                        all_feature=self.use_all_feature,
+                        ids=self.class_name_to_id)
+        X, Y = preprocess_data(X, Y)
         return X, Y
-
-    def __load_data(self, path, csvfile):
-        X = []
-        Y = []
-        with open(join(path, csvfile), 'rb') as file:
-            ecgreader = reader(file, delimiter=',')
-            for row in ecgreader:
-                val = loadmat(join(path, row[0]))['val']
-                label = row[1]
-                if self.use_all_feature:
-                    x = np.zeros(self.maxlen)
-                    n = val.shape[1]
-                    val = val.reshape(n)
-                    x[0:n] = val
-                    X.append(x)
-                else:
-                    X.append(val[:, 0:self.minlen].reshape(self.minlen))
-                Y.append(self.class_name_to_id[label])
-
-        # convert of python list to ndarray
-        X = np.asarray(X)
-        Y = np.asarray(Y)
-
-        # only take a subset of the data
-        if self.percent_data_use < 100:
-            N, d = X.shape
-            n = N / self.percent_data_use
-            idx = np.random.choice(range(N), n, replace=False)
-            X = X[idx, :]
-            Y = Y[idx]
-
-        Y = np.eye(self.nclasses)[Y]
-
-        return X, Y
-
-    # TODO: extract to utils file
-    def __preprocess_data(self, X, Y):
-        """
-        preprocess the data with fft, filter, pankin tomson, wavelet, whatever work
-        """
-        return X, Y
-
 
     def __graph_sample_data(self):
         """
         graph for ecg signal present in the validation
         """
-        self.__plot_mat('A00001', 'Normal', self.validation_path)
-        self.__plot_mat('A00004', 'AF', self.validation_path)
-        self.__plot_mat('A00011', 'Other', self.validation_path)
-        self.__plot_mat('A00585', 'Noise', self.validation_path)
+        plot_mat('A00001', 'Normal', self.validation_path)
+        plot_mat('A00004', 'AF', self.validation_path)
+        plot_mat('A00011', 'Other', self.validation_path)
+        plot_mat('A00585', 'Noise', self.validation_path)
 
-    # TODO: extract to utils file
-    def __plot_mat(self, file, title, path):
-        val = loadmat(join(path, file))['val'][:, 0:self.minlen]
-        gp.plot(val, title=title, xlabel='Time (s)', ylabel='Amplitude (mV)', _with='lines', terminal='dumb 120, 40', unset='grid')
-        # gp.xlabel('Time (s)')
-        # gp.ylabel('Amplitude (mV)')
-        # gp.title(title)
-        # plt.show()
 
     def get_train_batch(self, batch_size):
         """
