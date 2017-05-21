@@ -168,6 +168,12 @@ class CNN:
         """
         Run the test on the specific data
         """
+
+        # ensure correct file format
+        if not file.endswith('.mat'):
+            print 'Incorrect file format'
+            return
+
         try:
             # load .mat file, trim the data
             X = loadmat(file)['val'][:, 0:2714]

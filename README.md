@@ -26,6 +26,11 @@ $ python deepme.py <option>
 - test
 - path/to/.mat
 
+## Demo
+
+<img src=screenshot/demo.gif width=366 alt='Video Walkthrough' />
+
+
 ## Performance
 v0.1: Simple 1 layer logistic regression 
 
