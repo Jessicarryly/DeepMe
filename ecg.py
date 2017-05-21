@@ -1,7 +1,4 @@
-from os.path import join
 import numpy as np
-from csv import reader
-from scipy.io import loadmat
 from sklearn.cross_validation import train_test_split, check_random_state
 from utils import *
 
@@ -56,26 +53,28 @@ class ECG:
 
     def __init_dataset(self):
         # load training dataset
-        self.X_train, self.Y_train = self.__setup_data(self.training_path)
+        self.X_train, self.Y_train, _ = self.__setup_data(self.training_path)
         self.ntrains = self.X_train.shape[0]
         print 'Train ', self.X_train.shape
 
         # load testing dataset
-        self.X_test, self.Y_test = self.__setup_data(self.validation_path)
+        self.X_test, self.Y_test, count = self.__setup_data(self.validation_path)
+        print count
         self.ntests = self.X_test.shape[0]
+        self.N, self.A, self.O, self.P = count
         print 'Test ', self.X_test.shape
 
         # plot 4 example graph in the dataset
         self.__graph_sample_data()
 
     def __setup_data(self, path):
-        X, Y = load_data(path=path,
+        X, Y, count = load_data(path=path,
                         csvfile=self.csvfile,
                         percent=self.percent_data_use,
                         all_feature=self.use_all_feature,
                         ids=self.class_name_to_id)
-        X, Y = preprocess_data(X, Y)
-        return X, Y
+        X = preprocess_data(X)
+        return X, Y, count
 
     def __graph_sample_data(self):
         """
@@ -93,12 +92,8 @@ class ECG:
         """
         n, d = self.X_train.shape
         idx = np.random.choice(range(n), batch_size, replace=False)
-        return self.X_train[idx,:], self.Y_train[idx]
+        return self.X_train[idx], self.Y_train[idx]
 
-    def get_test_batch(self, batch_size):
-        """
-        Helper function to get mini batch from the test set for testing
-        """
-        n, d = self.X_test.shape
-        idx = np.random.choice(range(n), batch_size, replace=False)
-        return self.X_test[idx, :], self.Y_test[idx]
+    def get_test(self, position):
+        # [[postion]], so that out array dont reshape to vector
+        return self.X_test[[position]], self.Y_test[[position]]

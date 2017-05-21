@@ -20,12 +20,12 @@ class CNN:
         print 'setup convolution neural network'
         self.ecg = ecg
         self.learning_rate = learning_rate
+        self.id_to_class_name = {0: 'Normal', 1: 'AF', 2: 'Other', 3: 'Noise'}
         if develop:
-            self.epochs = 10
-            self.batch_size = 4
+            self.epochs = 5
         else:
             elf.epochs = epochs
-            self.batch_size = batch_size
+        self.batch_size = batch_size
         self.dropout = dropout
         self.__setup_model()
         self.sess = tf.Session()
@@ -85,6 +85,7 @@ class CNN:
         writer = tf.summary.FileWriter('graphs', self.sess.graph) # graph to visualize the training better
         self.sess.run(tf.global_variables_initializer()) # init all variables
         batches = self.ecg.ntrains / self.batch_size # get the number of batches for each epoch
+        saver = tf.train.Saver()
 
         # train
         for i in range(self.epochs):
@@ -99,23 +100,54 @@ class CNN:
         print 'Total train time {0}'.format(time.time() - start)
         print 'Optimizer finished'
 
-    def test(self):
+        # Save the sess
+        save_path = saver.save(self.sess, 'tmp/model.ckpt')
+        print("Model saved in file: %s" % save_path)
+
+    def test(self, sample_every=3, verbose=False):
         print 'start testing the cnn'
         start = time.time()
-        total_correct_preds = 0
-        batches = self.ecg.ntests/self.batch_size
-        for i in range(batches):
-            X_batch, Y_batch = self.ecg.get_test_batch(self.batch_size)
-            _, loss, logit = self.sess.run([self.optimizer, self.loss, self.logits], feed_dict={self.X:X_batch, self.Y: Y_batch, self.keep_prob:1})
-            preds = tf.nn.softmax(logit)
-            correct_preds = tf.equal(tf.argmax(preds, 1), tf.argmax(Y_batch, 1))
-            accuracy = tf.reduce_sum(tf.cast(correct_preds, tf.float32))
-            total_correct_preds += self.sess.run(accuracy)
-        print 'Accuracy {0}'.format(total_correct_preds/self.ecg.ntests)
-        print 'Total test time {0}'.format(time.time() - start)
 
+        # restore saved model
+        saver = tf.train.Saver()
+        saver.restore(self.sess, 'tmp/model.ckpt')
+
+        # total prediction in each class {Normal, AF, Other, Noise}
+        total = {0: 0, 1: 0, 2: 0, 3: 0}
+        # total correct prediction in each class {Normal, AF, Other, Noise}
+        corrects = {0: 0, 1: 0, 2: 0, 3: 0}
+
+        # run through every single data in test set
+        for i in range(self.ecg.ntests):
+            # run single forward pass
+            X_test, Y_test = self.ecg.get_test(i)
+            # no drop out in testing
+            loss, logit = self.sess.run([self.loss, self.logits], feed_dict={self.X: X_test, self.Y: Y_test, self.keep_prob: 1})
+
+            # get the prediction
+            probs = tf.nn.softmax(logit)
+            pred = np.argmax(probs)
+            correct = np.argmax(Y_test)
+            total[pred] += 1
+
+            if pred == correct:
+                corrects[pred] += 1
+
+            # print sample prediction
+            if verbose and i % sample_every == 0:
+                plot(X_test)
+                print 'True label is {0}'.format(self.id_to_class_name[correct])
+                print 'The model predicts ', self.id_to_class_name[pred]
+
+        # calculate the accuracy, base Scoring part at https://physionet.org/challenge/2017/#preparing
+        FN = 2 * corrects[0] / (total[0] + self.ecg.N)
+        FA = 2 * corrects[1] / (total[1] + self.ecg.A)
+        FO = 2 * corrects[2] / (total[2] + self.ecg.O)
+        FN = 2 * corrects[3] / (total[3] + self.ecg.N)
+        F = (FN + FA + FO + FN) / 4
+        print 'Accuracy in the validation set is {0}'.format(F)
 
 ecg = ECG()
 model = CNN(ecg)
-model.train()
+# model.train()
 model.test()

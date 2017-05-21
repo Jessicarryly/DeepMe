@@ -2,6 +2,8 @@
 The util class for common use function in the project
 """
 from scipy.io import loadmat
+from scipy.fftpack import fft
+from scipy.signal import butter, lfilter
 import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
@@ -9,12 +11,9 @@ import gnuplotlib as gp
 from os.path import join
 from csv import reader
 
-"""
-utility function for constructing the cnn model
-"""
 def weight_variable(shape, name):
-        initial = tf.truncated_normal(shape, stddev=0.01)
-        return tf.Variable(initial, name=name)
+    initial = tf.truncated_normal(shape, stddev=0.01)
+    return tf.Variable(initial, name=name)
 
 def bias_variable(shape, name):
     initial = tf.constant(0.1, shape=shape)
@@ -26,10 +25,16 @@ def conv2d(x, W):
 def max_pool_2x2(x):
     return tf.nn.max_pool(x, ksize=[1, 2, 1, 1], strides=[1, 2, 1, 1], padding='SAME')
 
-"""
-utility for visualize the data model
-"""
 def load_data(path, csvfile, percent=100, all_feature=False, length=2714, ids={}):
+    """
+    Load all data from the current path, with label save in .csv file
+    percent: percentage of data to use
+    all_feature: all data will be truncated wrt the max len data
+    length: provide the len of the data for trimming, or truncating, be carefull with this
+    id: map the label from string to index
+
+    Return the ndarray of data and how many data of each kind in the data set
+    """
     X = []
     Y = []
     with open(join(path, csvfile), 'rb') as file:
@@ -38,7 +43,7 @@ def load_data(path, csvfile, percent=100, all_feature=False, length=2714, ids={}
             val = loadmat(join(path, row[0]))['val']
             label = row[1]
             if all_feature:
-                x = np.zeros(self.maxlen)
+                x = np.zeros(len)
                 n = val.shape[1]
                 val = val.reshape(n)
                 x[0:n] = val
@@ -59,21 +64,36 @@ def load_data(path, csvfile, percent=100, all_feature=False, length=2714, ids={}
         X = X[idx, :]
         Y = Y[idx]
 
-    Y = np.eye(len(ids.keys()))[Y]
+    # count the number of N, F, O, ~; return the result as a tuple
+    count = np.bincount(Y)
 
-    return X, Y
+    Y = np.eye(len(ids.keys()))[Y] # Y = 1 where label index
 
-def preprocess_data(X, Y):
+    return X, Y, count
+
+def preprocess_data(X, preprocess=False):
     """
     preprocess the data with fft, filter, pankin tomson, wavelet, whatever work
+    X; Input signal to be preprocess
+    return X after preprocessing
     """
-    return X, Y
+    if preprocess:
+        # nyquist =
+        # cuttoff = 4.0 # Hz
+        X = fft(X)
+
+    return X
 
 
-def plot_mat(file, title, path, len=2714):
+def plot_mat(file, title, path, len=1200):
+    """
+    Plot the data from .mat file to terminal
+    """
     val = loadmat(join(path, file))['val'][:, 0:len]
-    gp.plot(val, title=title, xlabel='Time (s)', ylabel='Amplitude (mV)', _with='lines', terminal='dumb 120, 40', unset='grid')
-    # gp.xlabel('Time (s)')
-    # gp.ylabel('Amplitude (mV)')
-    # gp.title(title)
-    # plt.show()
+    gp.plot(val, title=title, xlabel='Time (s)', ylabel='Amplitude (mV)', _with='lines', terminal='dumb 80, 40', unset='grid')
+
+def plot(X, len=1200):
+    """
+    Plot the data of X to terminal
+    """
+    gp.plot(X, xlabel='Time (s)', ylabel='Amplitude (mV)', _with='lines', terminal='dumb 80, 40', unset='grid')
