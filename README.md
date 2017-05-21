@@ -8,12 +8,7 @@ DeepMe is a neural network design for [2017 Physionet Challenge](https://physion
 ```shell
 $ git clone https://github.com/dattran2346/DeepMe.git
 $ cd DeepMe
-$ wget https://physionet.org/challenge/2017/training2017.zip
-$ unzip training2017
-$ wget https://physionet.org/challenge/2017/sample2017.zip
-$ unzip sample2017
-$ pip install -r requirements.txt
-$ mv sample/validation validation
+$ ./setup.sh
 ```
 
 ## Usage
