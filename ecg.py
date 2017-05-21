@@ -8,7 +8,7 @@ class ECG:
     2017 physionet challenge and feed it into training model
     """
 
-    def __init__(self, training_path='training2017', validation_path='validation', csvfile='REFERENCE.csv', random_state=69, use_all_feature=False, percent_data_use=10):
+    def __init__(self, training_path='training2017', validation_path='validation', csvfile='REFERENCE.csv', random_state=69, use_all_feature=False, percent_data_use=100):
         """
         setting up the data model
         training_path: path to training directory

@@ -24,7 +24,7 @@ class CNN:
         if develop:
             self.epochs = 5
         else:
-            elf.epochs = epochs
+            self.epochs = epochs
         self.batch_size = batch_size
         self.dropout = dropout
         self.__setup_model()
@@ -104,7 +104,7 @@ class CNN:
         save_path = saver.save(self.sess, 'tmp/model.ckpt')
         print("Model saved in file: %s" % save_path)
 
-    def test(self, sample_every=3, verbose=False):
+    def test(self, sample_every=3, verbose=True):
         print 'start testing the cnn'
         start = time.time()
 
@@ -125,29 +125,30 @@ class CNN:
             loss, logit = self.sess.run([self.loss, self.logits], feed_dict={self.X: X_test, self.Y: Y_test, self.keep_prob: 1})
 
             # get the prediction
-            probs = tf.nn.softmax(logit)
-            pred = np.argmax(probs)
-            correct = np.argmax(Y_test)
-            total[pred] += 1
+            probs = self.sess.run(tf.nn.softmax(logit))
+            pred = self.sess.run(tf.argmax(probs, 1))[0]
 
+            correct = np.argmax(Y_test)
+
+            total[pred] += 1
             if pred == correct:
                 corrects[pred] += 1
 
-            # print sample prediction
             if verbose and i % sample_every == 0:
                 plot(X_test)
                 print 'True label is {0}'.format(self.id_to_class_name[correct])
                 print 'The model predicts ', self.id_to_class_name[pred]
 
         # calculate the accuracy, base Scoring part at https://physionet.org/challenge/2017/#preparing
-        FN = 2 * corrects[0] / (total[0] + self.ecg.N)
-        FA = 2 * corrects[1] / (total[1] + self.ecg.A)
-        FO = 2 * corrects[2] / (total[2] + self.ecg.O)
-        FN = 2 * corrects[3] / (total[3] + self.ecg.N)
-        F = (FN + FA + FO + FN) / 4
+        FN = 2.0 * corrects[0] / (total[0] + self.ecg.N)
+        FA = 2.0 * corrects[1] / (total[1] + self.ecg.A)
+        FO = 2.0 * corrects[2] / (total[2] + self.ecg.O)
+        FP = 2.0 * corrects[3] / (total[3] + self.ecg.P)
+        F = (FN + FA + FO + FP) / 4.0
         print 'Accuracy in the validation set is {0}'.format(F)
+        print 'Testing time {0}'.format(time.time() - start)
 
 ecg = ECG()
-model = CNN(ecg)
-# model.train()
-model.test()
+model = CNN(ecg, develop=False)
+model.train()
+model.test(sample_every=30)
