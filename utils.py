@@ -96,4 +96,4 @@ def plot(X, len=1200):
     """
     Plot the data of X to terminal
     """
-    gp.plot(X, xlabel='Time (s)', ylabel='Amplitude (mV)', _with='lines', terminal='dumb 80, 40', unset='grid')
+    gp.plot(X[:, 0:len], xlabel='Time (s)', ylabel='Amplitude (mV)', _with='lines', terminal='dumb 80, 40', unset='grid')

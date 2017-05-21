@@ -1,5 +1,4 @@
 import numpy as np
-from sklearn.cross_validation import train_test_split, check_random_state
 from utils import *
 
 class ECG:
@@ -8,7 +7,7 @@ class ECG:
     2017 physionet challenge and feed it into training model
     """
 
-    def __init__(self, training_path='training2017', validation_path='validation', csvfile='REFERENCE.csv', random_state=69, use_all_feature=False, percent_data_use=100):
+    def __init__(self, training_path='training2017', validation_path='validation', csvfile='REFERENCE.csv', random_state=69, use_all_feature=False, percent_data_use=100, verbose=False):
         """
         setting up the data model
         training_path: path to training directory
@@ -28,6 +27,7 @@ class ECG:
         self.use_all_feature = use_all_feature
         self.percent_data_use = percent_data_use
         self.random_state = random_state
+        self.verbose = verbose
 
         # training and testing dataset
         self.X_train = None
@@ -55,17 +55,19 @@ class ECG:
         # load training dataset
         self.X_train, self.Y_train, _ = self.__setup_data(self.training_path)
         self.ntrains = self.X_train.shape[0]
-        print 'Train ', self.X_train.shape
 
         # load testing dataset
         self.X_test, self.Y_test, count = self.__setup_data(self.validation_path)
-        print count
+
         self.ntests = self.X_test.shape[0]
         self.N, self.A, self.O, self.P = count
-        print 'Test ', self.X_test.shape
 
         # plot 4 example graph in the dataset
-        self.__graph_sample_data()
+        if self.verbose:
+            print 'Train ', self.X_train.shape
+            print 'Test ', self.X_test.shape
+            print 'Label each', count
+            self.__graph_sample_data()
 
     def __setup_data(self, path):
         X, Y, count = load_data(path=path,

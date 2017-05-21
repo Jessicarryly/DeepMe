@@ -7,9 +7,9 @@ from utils import *
 the model that will perform the training on the dataset
 """
 class CNN:
-    def __init__(self, ecg, learning_rate=1e-3, epochs=30, batch_size=128, dropout=0.75, develop=True):
+    def __init__(self, ecg=ECG(), learning_rate=1e-3, epochs=30, batch_size=128, dropout=0.75, develop=True):
         """
-         init the convolution neural network
+         init the convolution neural network for training
          ecg: the data model that will provide data for each batch
          learning_rate: the learning rate to fetch to tensorflow
          epochs: number of iteration time throught the dataset
@@ -20,17 +20,17 @@ class CNN:
         print 'setup convolution neural network'
         self.ecg = ecg
         self.learning_rate = learning_rate
-        self.id_to_class_name = {0: 'Normal', 1: 'AF', 2: 'Other', 3: 'Noise'}
         if develop:
             self.epochs = 5
         else:
             self.epochs = epochs
         self.batch_size = batch_size
         self.dropout = dropout
-        self.__setup_model()
-        self.sess = tf.Session()
+        self.__init_layer()
+        self.__init_session()
 
-    def __setup_model(self):
+
+    def __init_layer(self):
         """
         setup all the layer needed, following the architecture
         [affine - relu - maxpool] - [affine - relu] - [fc] - [softmax]
@@ -73,6 +73,15 @@ class CNN:
         # optimizer
         self.optimizer = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss)
 
+    def __init_session(self):
+        """
+        Init the tensorflow session and path to save model
+        """
+        self.sess = tf.Session()
+        # TODO: 'models/fft.ckpt'
+        self.save_path = 'tmp/model.ckpt'
+        self.id_to_class_name = {0: 'Normal', 1: 'AF', 2: 'Other', 3: 'Noise'}
+
     def train(self):
         """
         start training the model using the setting in init
@@ -101,16 +110,21 @@ class CNN:
         print 'Optimizer finished'
 
         # Save the sess
-        save_path = saver.save(self.sess, 'tmp/model.ckpt')
-        print("Model saved in file: %s" % save_path)
+        saver.save(self.sess, self.save_path)
+        print("Model saved in file: %s" % self.save_path)
 
-    def test(self, sample_every=3, verbose=True):
+    def test(self, sample_every=30, verbose=True):
+        """
+        run the test on the whole data set
+        sample_every: print the result of the model every x time
+        verbose: should print result to terminals
+        """
         print 'start testing the cnn'
         start = time.time()
 
         # restore saved model
         saver = tf.train.Saver()
-        saver.restore(self.sess, 'tmp/model.ckpt')
+        saver.restore(self.sess, self.save_path)
 
         # total prediction in each class {Normal, AF, Other, Noise}
         total = {0: 0, 1: 0, 2: 0, 3: 0}
@@ -121,10 +135,12 @@ class CNN:
         for i in range(self.ecg.ntests):
             # run single forward pass
             X_test, Y_test = self.ecg.get_test(i)
+            print X_test.shape
             # no drop out in testing
             loss, logit = self.sess.run([self.loss, self.logits], feed_dict={self.X: X_test, self.Y: Y_test, self.keep_prob: 1})
 
             # get the prediction
+            print logit
             probs = self.sess.run(tf.nn.softmax(logit))
             pred = self.sess.run(tf.argmax(probs, 1))[0]
 
@@ -137,7 +153,7 @@ class CNN:
             if verbose and i % sample_every == 0:
                 plot(X_test)
                 print 'True label is {0}'.format(self.id_to_class_name[correct])
-                print 'The model predicts ', self.id_to_class_name[pred]
+                print 'The model predicts', self.id_to_class_name[pred]
 
         # calculate the accuracy, base Scoring part at https://physionet.org/challenge/2017/#preparing
         FN = 2.0 * corrects[0] / (total[0] + self.ecg.N)
@@ -148,7 +164,26 @@ class CNN:
         print 'Accuracy in the validation set is {0}'.format(F)
         print 'Testing time {0}'.format(time.time() - start)
 
-ecg = ECG()
-model = CNN(ecg, develop=False)
-model.train()
-model.test(sample_every=30)
+    def predict(self, file):
+        """
+        Run the test on the specific data
+        """
+        try:
+            # load .mat file, trim the data
+            X = loadmat(file)['val'][:, 0:2714]
+            # restore save model
+            saver = tf.train.Saver()
+            saver.restore(self.sess, self.save_path)
+
+            # run the test
+            logit = self.sess.run(self.logits, feed_dict={self.X: X, self.keep_prob: 1})
+
+            # get the prediction
+            probs = self.sess.run(tf.nn.softmax(logit))
+            pred = self.sess.run(tf.argmax(probs, 1))[0]
+
+            # visualize data
+            plot(X)
+            print 'The model predicts', self.id_to_class_name[pred]
+        except IOError:
+            print 'No such file {0}'.format(file)

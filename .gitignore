@@ -3,5 +3,6 @@ physionet/*
 training2017/*
 validation/*
 tmp/*
+models/*
 
 *.pyc
