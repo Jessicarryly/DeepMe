@@ -13,8 +13,18 @@ $ unzip training2017
 $ wget https://physionet.org/challenge/2017/sample2017.zip
 $ unzip sample2017
 $ pip install -r requirements.txt
-$ python model.py
+$ mv sample/validation validation
 ```
+
+## Usage
+```shell
+$ python deepme.py <option>
+```
+
+#### Options:
+- train
+- test
+- path/to/.mat
 
 ## Performance
 v0.1: Simple 1 layer logistic regression 
@@ -24,6 +34,10 @@ v0.1: Simple 1 layer logistic regression
 v0.2: [affine - relu -pool] - [affine - relu] - [fc] - softmax
 
 <img src=screenshot/v0.2.png width='256' alt='image' />
+
+v0.3: Preprocess data using Fast Fourier Transform
+
+<img src=screenshot/v0.3.png width=256 alt=image />
 
 ## Inspiration
 
