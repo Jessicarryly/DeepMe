@@ -36,7 +36,7 @@ class CNN:
         [affine - relu - maxpool] - [affine - relu] - [fc] - [softmax]
         """
 
-        # Input to network
+        # Input to network, the number of feature is the power of 2
         self.X = tf.placeholder(tf.float32, [None, self.ecg.nfeatures], name='X_placeholder')
         self.Y = tf.placeholder(tf.float32, [None, self.ecg.nclasses], name='Y_placeholder')
         x_image = tf.reshape(self.X, [-1, self.ecg.nfeatures, 1, 1])

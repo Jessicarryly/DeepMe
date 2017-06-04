@@ -44,9 +44,9 @@ class ECG:
 
         # number of feature in each data
         if self.use_all_feature:
-            self.nfeatures = self.maxlen
+            self.nfeatures = 16384 # 2^14
         else:
-            self.nfeatures = self.minlen
+            self.nfeatures = 2048 # 2^11
 
         self.__init_dataset()
 

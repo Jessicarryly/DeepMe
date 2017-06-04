@@ -85,7 +85,7 @@ def preprocess_data(X, preprocess=False):
     return X
 
 
-def plot_mat(file, title, path, len=1200):
+def plot_mat(file, title, path, len=2048):
     """
     Plot the data from .mat file to terminal
     """
