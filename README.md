@@ -3,7 +3,7 @@
 
 ## Introduction
 DeepMe is a neural network design for [2017 Physionet Challenge](https://physionet.org/challenge/2017/#preparing) on ECG classifcation
- 
+
 ## Install
 ```shell
 $ git clone https://github.com/dattran2346/DeepMe.git
@@ -18,6 +18,7 @@ $ python deepme.py <option>
 
 #### Options:
 - train
+- develop
 - test
 - path/to/.mat
 
@@ -27,7 +28,7 @@ $ python deepme.py <option>
 
 
 ## Performance
-v0.1: Simple 1 layer logistic regression 
+v0.1: Simple 1 layer logistic regression
 
 <img src=screenshot/v0.1.png width='256' alt='image' />
 

@@ -6,8 +6,8 @@ from utils import *
 """
 the model that will perform the training on the dataset
 """
-class CNN:
-    def __init__(self, ecg=ECG(), learning_rate=1e-3, epochs=30, batch_size=128, dropout=0.75, develop=True):
+class VGG:
+    def __init__(self, ecg=ECG(), learning_rate=1e-3, epochs=30, batch_size=128, dropout=0.75, develop=False):
         """
          init the convolution neural network for training
          ecg: the data model that will provide data for each batch
@@ -39,36 +39,124 @@ class CNN:
         # Input to network, the number of feature is the power of 2
         self.X = tf.placeholder(tf.float32, [None, self.ecg.nfeatures], name='X_placeholder')
         self.Y = tf.placeholder(tf.float32, [None, self.ecg.nclasses], name='Y_placeholder')
-        x_image = tf.reshape(self.X, [-1, self.ecg.nfeatures, 1, 1])
+        ecg = tf.reshape(self.X, [-1, self.ecg.nfeatures, 1, 1])
 
-        # 1st conv layer
-        W_conv1 = weight_variable([5, 1, 1, 32], 'W_conv1')
-        b_conv1 = bias_variable([32], 'b_conv1')
-        h_conv1 = tf.nn.relu(conv2d(x_image, W_conv1) + b_conv1)
-        h_pool1 = max_pool_2x2(h_conv1)
+        # conv1_1
+        with tf.name_scope('conv1_1') as scope:
+            W = weight_variable([5, 1, 1, 64])
+            b = bias_variable([64])
+            self.conv1_1 = tf.nn.relu(conv2d(ecg, W) + b)
 
-        # 2nd conv layer
-        W_conv2 = weight_variable([5, 1, 32, 64], 'W_conv2')
-        b_conv2 = bias_variable([64], 'b_conv2')
-        h_conv2 = tf.nn.relu(conv2d(h_pool1, W_conv2) + b_conv2)
-        # h_pool2 = max_pool_2x2(h_conv2)
+        # conv1_2
+        with tf.name_scope('conv1_2') as scope:
+            W = weight_variable([5, 1, 64, 64])
+            b = bias_variable([64]);
+            self.conv1_2 = tf.nn.relu(conv2d(self.conv1_1, W) + b)
 
-        # 1st fc layer
-        W_fc1 = weight_variable([self.ecg.nfeatures*32, 1024], 'W_fc1')
-        b_fc1 = bias_variable([1024], 'b_fc1')
-        h_conv2_flat = tf.reshape(h_conv2, [-1, self.ecg.nfeatures*32])
-        h_fc1 = tf.nn.relu(tf.matmul(h_conv2_flat, W_fc1) + b_fc1)
+        # pool1
+        self.pool1 = max_pool_2x2(self.conv1_2, name='pool1');
+
+        # conv2_1
+        with tf.name_scope('conv2_1') as scope:
+            W = weight_variable([5, 1, 64, 128]);
+            b = bias_variable([128]);
+            self.conv2_1 = tf.nn.relu(conv2d(self.pool1, W) + b)
+
+        # conv2_2
+        with tf.name_scope('conv2_2') as scope:
+            W = weight_variable([5, 1, 128, 128]);
+            b = bias_variable([128]);
+            self.conv2_2 = tf.nn.relu(conv2d(self.conv2_1, W) + b)
+
+        # pool2:
+        self.pool2 = max_pool_2x2(self.conv2_2, name='pool2');
+
+        # conv3_1
+        with tf.name_scope('conv3_1') as scope:
+            W = weight_variable([5, 1, 128, 256]);
+            b = bias_variable([256]);
+            self.conv3_1 = tf.nn.relu(conv2d(self.pool2, W) + b)
+
+        # conv3_2
+        with tf.name_scope('conv3_2') as scope:
+            W = weight_variable([5, 1, 256, 256]);
+            b = bias_variable([256]);
+            self.conv3_2 = tf.nn.relu(conv2d(self.conv3_1, W) + b)
+
+        # conv3_3
+        with tf.name_scope('conv3_3') as scope:
+            W = weight_variable([5, 1, 256, 256]);
+            b = bias_variable([256]);
+            self.conv3_3 = tf.nn.relu(conv2d(self.conv3_2, W) + b)
+
+        # pool3
+        self.pool3 = max_pool_2x2(self.conv3_3, name='pool3')
+
+        # conv4_1
+        with tf.name_scope('conv4_1') as scope:
+            W = weight_variable([5, 1, 256, 512]);
+            b = bias_variable([512]);
+            self.conv4_1 = tf.nn.relu(conv2d(self.pool3, W) + b)
+
+        # conv4_2
+        with tf.name_scope('conv4_2') as scope:
+            W = weight_variable([5, 1, 512, 512]);
+            b = bias_variable([512]);
+            self.conv4_2 = tf.nn.relu(conv2d(self.conv4_1, W) + b)
+
+        # conv4_3
+        with tf.name_scope('conv4_3') as scope:
+            W = weight_variable([5, 1, 512, 512]);
+            b = bias_variable([512]);
+            self.conv4_3 = tf.nn.relu(conv2d(self.conv4_2, W) + b)
+
+        # pool4
+        self.pool4 = max_pool_2x2(self.conv4_3, name='pool4')
+
+        # conv5_1
+        with tf.name_scope('conv5_1') as scope:
+            W = weight_variable([5, 1, 512, 512]);
+            b = bias_variable([512]);
+            self.conv5_1 = tf.nn.relu(conv2d(self.pool4, W) + b)
+
+        # conv5_2
+        with tf.name_scope('conv5_2') as scope:
+            W = weight_variable([5, 1, 512, 512]);
+            b = bias_variable([512]);
+            self.conv5_2 = tf.nn.relu(conv2d(self.conv5_1, W) + b)
+
+        # conv5_3
+        with tf.name_scope('conv4_3') as scope:
+            W = weight_variable([5, 1, 512, 512]);
+            b = bias_variable([512]);
+            self.conv5_3 = tf.nn.relu(conv2d(self.conv5_2, W) + b)
+
+        # pool5
+        self.pool5 = max_pool_2x2(self.conv5_3, name='pool5')
+
         self.keep_prob = tf.placeholder(tf.float32)
-        h_fc1_drop = tf.nn.dropout(h_fc1, self.keep_prob)
 
-        # 2nd fc layer
-        W_fc2 = weight_variable([1024, self.ecg.nclasses], 'W_fc2')
-        b_fc2 = bias_variable([self.ecg.nclasses], 'b_fc2')
+        # fc1
+        with tf.name_scope('fc1') as scope:
+            shape = int(np.prod(self.pool5.get_shape()[1:]))
+            pool5_flat = tf.reshape(self.pool5, [-1, shape])
+            W = weight_variable([shape, 1024])
+            b = bias_variable([1024])
+            out = tf.nn.relu(tf.matmul(pool5_flat, W) + b)
+            self.fc1 = tf.nn.dropout(out, self.keep_prob)
 
-        # loss
-        self.logits = tf.matmul(h_fc1_drop, W_fc2) + b_fc2
-        entropy = tf.nn.softmax_cross_entropy_with_logits(self.logits, self.Y, name='loss')
-        self.loss = tf.reduce_mean(entropy)
+        with tf.name_scope('fc2') as scope:
+            W = weight_variable([1024, 1024])
+            b = bias_variable([1024])
+            out = tf.nn.relu(tf.matmul(self.fc1, W) + b)
+            self.fc2 = tf.nn.dropout(out, self.keep_prob)
+
+        with tf.name_scope('fc3') as scope:
+            W = weight_variable([1024, self.ecg.nclasses])
+            b = bias_variable([self.ecg.nclasses])
+            self.logits = tf.matmul(self.fc2, W) + b
+            entropy = tf.nn.softmax_cross_entropy_with_logits(self.logits, self.Y, name='loss')
+            self.loss = tf.reduce_mean(entropy)
 
         # optimizer
         self.optimizer = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss)
@@ -79,7 +167,7 @@ class CNN:
         """
         self.sess = tf.Session()
         # TODO: 'models/fft.ckpt'
-        self.save_path = 'tmp/model.ckpt'
+        self.save_path = 'tmp/vgg16.ckpt'
         self.id_to_class_name = {0: 'Normal', 1: 'AF', 2: 'Other', 3: 'Noise'}
 
     def train(self):
