@@ -35,9 +35,7 @@ v0.2: [affine - relu -pool] - [affine - relu] - [fc] - softmax
 
 <img src=screenshot/v0.2.png width='256' alt='image' />
 
-v0.3: Preprocess data using Fast Fourier Transform
-
-<img src=screenshot/v0.3.png width=256 alt=image />
+v0.3: TODO: Add some filter
 
 ## Inspiration
 
