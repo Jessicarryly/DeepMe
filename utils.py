@@ -3,7 +3,7 @@ The util class for common use function in the project
 """
 from scipy.io import loadmat
 from scipy.fftpack import fft
-from scipy.signal import butter, lfilter
+from scipy.signal import butter, firwin, lfilter
 import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
@@ -25,7 +25,7 @@ def conv2d(x, W):
 def max_pool_2x2(x):
     return tf.nn.max_pool(x, ksize=[1, 2, 1, 1], strides=[1, 2, 1, 1], padding='SAME')
 
-def load_data(path, csvfile, percent=100, all_feature=False, length=2714, ids={}):
+def load_data(path, csvfile, percent=100, all_feature=False, length=2048, ids={}):
     """
     Load all data from the current path, with label save in .csv file
     percent: percentage of data to use
@@ -71,18 +71,21 @@ def load_data(path, csvfile, percent=100, all_feature=False, length=2714, ids={}
 
     return X, Y, count
 
-def preprocess_data(X, preprocess=False):
+def preprocess_data(X, preprocess=True):
     """
     preprocess the data with fft, filter, pankin tomson, wavelet, whatever work
     X; Input signal to be preprocess
     return X after preprocessing
     """
     if preprocess:
-        # nyquist =
-        # cuttoff = 4.0 # Hz
-        X = fft(X)
-
-    return X
+        fs = 300.0
+        fc = 40.0
+        Wc = fc / (fs / 2)
+        N = 41
+        b = firwin(N, Wc)
+        return lfilter(b, 1, X)
+    else:
+        return X
 
 
 def plot_mat(file, title, path, len=2048):

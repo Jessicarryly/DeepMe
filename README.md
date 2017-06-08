@@ -2,7 +2,15 @@
 # DeepMe
 
 ## Introduction
-DeepMe is a neural network design for [2017 Physionet Challenge](https://physionet.org/challenge/2017/#preparing) on ECG classifcation
+DeepMe is a neural network design for [2017 Physionet Challenge](https://physionet.org/challenge/2017/#preparing) on ECG classifcation. The data has ~ 8500 trainning set and ~ 300 validation set. All ECG recoding were sampled at 300 Hz and has been band pass filter (0.5 Hz - 50 Hz). I further decided to lowpass filter the signal with 40 Hz cutoff.
+
+- Signal from physionet
+
+<img src=screenshot/before.png width=512 alt='image' />
+
+- Signal after my 40 Hz filter
+
+<img src=screenshot/after.png width=512 alt='image' />
  
 ## Install
 ```shell
@@ -23,19 +31,22 @@ $ python deepme.py <option>
 
 ## Demo
 
-<img src=screenshot/demo.gif width=366 alt='Video Walkthrough' />
+<img src=screenshot/demo.gif width=512 alt='Video Walkthrough' />
 
 
 ## Performance
 v0.1: Simple 1 layer logistic regression 
 
-<img src=screenshot/v0.1.png width='256' alt='image' />
+<img src=screenshot/v0.1.png width='512' alt='image' />
 
 v0.2: [affine - relu -pool] - [affine - relu] - [fc] - softmax
 
-<img src=screenshot/v0.2.png width='256' alt='image' />
+<img src=screenshot/v0.2.png width='512' alt='image' />
 
-v0.3: TODO: Add some filter
+v0.3: Add lowpass FIR filter with cutoff frequency of 40 Hz, default input size is 2^11 = 2048 to boost computation efficiency
+<img src=screenshot/v0.3.png width='512' alt='image' />
+
+
 
 ## Inspiration
 

@@ -7,7 +7,7 @@ from utils import *
 the model that will perform the training on the dataset
 """
 class CNN:
-    def __init__(self, ecg=ECG(), learning_rate=1e-3, epochs=30, batch_size=128, dropout=0.75, develop=True):
+    def __init__(self, ecg=ECG(), learning_rate=1e-3, epochs=30, batch_size=128, dropout=0.75, develop=False):
         """
          init the convolution neural network for training
          ecg: the data model that will provide data for each batch
@@ -33,7 +33,7 @@ class CNN:
     def __init_layer(self):
         """
         setup all the layer needed, following the architecture
-        [affine - relu - maxpool] - [affine - relu] - [fc] - [softmax]
+        [affine - relu - maxpool] - [affine - relu - maxpool] - [fc] - [softmax]
         """
 
         # Input to network, the number of feature is the power of 2
@@ -51,7 +51,7 @@ class CNN:
         W_conv2 = weight_variable([5, 1, 32, 64], 'W_conv2')
         b_conv2 = bias_variable([64], 'b_conv2')
         h_conv2 = tf.nn.relu(conv2d(h_pool1, W_conv2) + b_conv2)
-        # h_pool2 = max_pool_2x2(h_conv2)
+        h_pool2 = max_pool_2x2(h_conv2)
 
         # 1st fc layer
         W_fc1 = weight_variable([self.ecg.nfeatures*32, 1024], 'W_fc1')
@@ -78,8 +78,8 @@ class CNN:
         Init the tensorflow session and path to save model
         """
         self.sess = tf.Session()
-        # TODO: 'models/fft.ckpt'
-        self.save_path = 'tmp/model.ckpt'
+        # TODO: 'models/b.ckpt'
+        self.save_path = 'tmp/fir.ckpt'
         self.id_to_class_name = {0: 'Normal', 1: 'AF', 2: 'Other', 3: 'Noise'}
 
     def train(self):
@@ -91,7 +91,9 @@ class CNN:
 
         # setup before train
         start = time.time() # measure training time
-        writer = tf.summary.FileWriter('graphs', self.sess.graph) # graph to visualize the training better
+        writer = tf.summary.FileWriter('graphs', 
+                                        self.sess.graph) # graph to visualize the training better
+
         self.sess.run(tf.global_variables_initializer()) # init all variables
         batches = self.ecg.ntrains / self.batch_size # get the number of batches for each epoch
         saver = tf.train.Saver()
@@ -99,7 +101,7 @@ class CNN:
         # train
         for i in range(self.epochs):
             loss = 0
-            for j in range(batches):
+            for _ in range(batches):
                 X_batch, Y_batch = self.ecg.get_train_batch(self.batch_size)
                 _, loss_batch = self.sess.run([self.optimizer, self.loss], feed_dict={self.X: X_batch, self.Y: Y_batch, self.keep_prob: self.dropout})
                 loss += loss_batch
@@ -156,12 +158,12 @@ class CNN:
                 print 'The model predicts', self.id_to_class_name[pred]
 
         # calculate the accuracy, base Scoring part at https://physionet.org/challenge/2017/#preparing
-        FN = 2.0 * corrects[0] / (total[0] + self.ecg.N)
-        FA = 2.0 * corrects[1] / (total[1] + self.ecg.A)
-        FO = 2.0 * corrects[2] / (total[2] + self.ecg.O)
-        FP = 2.0 * corrects[3] / (total[3] + self.ecg.P)
-        F = (FN + FA + FO + FP) / 4.0
-        print 'Accuracy in the validation set is {0}'.format(F)
+        fn = 2.0 * corrects[0] / (total[0] + self.ecg.N)
+        fa = 2.0 * corrects[1] / (total[1] + self.ecg.A)
+        fo = 2.0 * corrects[2] / (total[2] + self.ecg.O)
+        fp = 2.0 * corrects[3] / (total[3] + self.ecg.P)
+        f = (fn + fa + fo + fp) / 4.0
+        print 'Accuracy in the validation set is {0}'.format(f)
         print 'Testing time {0}'.format(time.time() - start)
 
     def predict(self, file):
@@ -176,7 +178,7 @@ class CNN:
 
         try:
             # load .mat file, trim the data
-            X = loadmat(file)['val'][:, 0:2714]
+            X = loadmat(file)['val'][:, 0:2048]
             # restore save model
             saver = tf.train.Saver()
             saver.restore(self.sess, self.save_path)

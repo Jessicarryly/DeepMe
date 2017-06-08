@@ -71,10 +71,10 @@ class ECG:
 
     def __setup_data(self, path):
         X, Y, count = load_data(path=path,
-                        csvfile=self.csvfile,
-                        percent=self.percent_data_use,
-                        all_feature=self.use_all_feature,
-                        ids=self.class_name_to_id)
+                                csvfile=self.csvfile,
+                                percent=self.percent_data_use,
+                                all_feature=self.use_all_feature,
+                                ids=self.class_name_to_id)
         X = preprocess_data(X)
         return X, Y, count
 
