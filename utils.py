@@ -78,15 +78,27 @@ def preprocess_data(X, preprocess=True):
     return X after preprocessing
     """
     if preprocess:
-        fs = 300.0
-        fc = 40.0
-        Wc = fc / (fs / 2)
-        N = 41
-        b = firwin(N, Wc)
-        return lfilter(b, 1, X)
+        return fir(X)
     else:
         return X
 
+# fir low pass filter with cutoff frequency of 40Hz
+def fir(x):
+    fs = 300.0
+    fc = 40.0
+    Wc = fc / (fs / 2)
+    N = 41
+    b = firwin(N, Wc)
+    return lfilter(b, 1, x)
+
+# iir lowpass filter with cutoff frequency of 40Hz
+def iir(x):
+    fs = 300.0
+    fc = 40.0
+    Wc = fc / (fs / 2)
+    N = 41
+    [b, a] = butter(N, Wc)
+    return lfilter(b, a, x)
 
 def plot_mat(file, title, path, len=2048):
     """

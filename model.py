@@ -79,7 +79,7 @@ class CNN:
         """
         self.sess = tf.Session()
         # TODO: 'models/b.ckpt'
-        self.save_path = 'tmp/fir.ckpt'
+        self.save_path = 'tmp/iir.ckpt'
         self.id_to_class_name = {0: 'Normal', 1: 'AF', 2: 'Other', 3: 'Noise'}
 
     def train(self):
