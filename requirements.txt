@@ -1,5 +1,5 @@
 scipy
 matplotlib
 numpy
-tensorflow
+tensorflow==0.12.1
 gnuplotlib
