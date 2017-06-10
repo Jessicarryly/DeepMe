@@ -11,19 +11,19 @@ import gnuplotlib as gp
 from os.path import join
 from csv import reader
 
-def weight_variable(shape, name):
+def weight_variable(shape, name='w'):
     initial = tf.truncated_normal(shape, stddev=0.01)
     return tf.Variable(initial, name=name)
 
-def bias_variable(shape, name):
+def bias_variable(shape, name='b'):
     initial = tf.constant(0.1, shape=shape)
     return tf.Variable(initial, name=name)
 
 def conv2d(x, W):
     return tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding='SAME')
 
-def max_pool_2x2(x):
-    return tf.nn.max_pool(x, ksize=[1, 2, 1, 1], strides=[1, 2, 1, 1], padding='SAME')
+def max_pool_2x2(x, name='pool'):
+    return tf.nn.max_pool(x, ksize=[1, 2, 1, 1], strides=[1, 2, 1, 1], padding='SAME', name=name)
 
 def load_data(path, csvfile, percent=100, all_feature=False, length=2048, ids={}):
     """

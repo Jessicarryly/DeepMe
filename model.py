@@ -42,33 +42,66 @@ class CNN:
         x_image = tf.reshape(self.X, [-1, self.ecg.nfeatures, 1, 1])
 
         # 1st conv layer
-        W_conv1 = weight_variable([5, 1, 1, 32], 'W_conv1')
-        b_conv1 = bias_variable([32], 'b_conv1')
-        h_conv1 = tf.nn.relu(conv2d(x_image, W_conv1) + b_conv1)
-        h_pool1 = max_pool_2x2(h_conv1)
+        with tf.name_scope('conv1') as scope:
+            w = weight_variable([5, 1, 1, 32])
+            b = bias_variable([32])
+            h = tf.nn.relu(conv2d(x_image, w) + b)
+            self.conv1 = max_pool_2x2(h)
 
         # 2nd conv layer
-        W_conv2 = weight_variable([5, 1, 32, 64], 'W_conv2')
-        b_conv2 = bias_variable([64], 'b_conv2')
-        h_conv2 = tf.nn.relu(conv2d(h_pool1, W_conv2) + b_conv2)
-        h_pool2 = max_pool_2x2(h_conv2)
+        with tf.name_scope('conv2') as scope:
+            w = weight_variable([5, 1, 32, 64])
+            b = bias_variable([64])
+            h = tf.nn.relu(conv2d(self.conv1, w) + b)
+            self.conv2 = max_pool_2x2(h)
+        
+        # 3rd conv layer
+        with tf.name_scope('conv3') as scope:
+            w = weight_variable([5, 1, 64, 64])
+            b = bias_variable([64])
+            self.conv3 = tf.nn.relu(conv2d(self.conv2, w) + b)
+        
+        # 4th conv layer
+        with tf.name_scope('conv4') as scope:
+            w = weight_variable([5, 1, 64, 64])
+            b = bias_variable([64])
+            self.conv4 = tf.nn.relu(conv2d(self.conv3, w) + b)
+
+        # 5th conv layer
+        with tf.name_scope('conv5') as scope:
+            w = weight_variable([5, 1, 64, 64])
+            b = bias_variable([64])
+            h = tf.nn.relu(conv2d(self.conv4, w) + b)
+            self.conv5 = max_pool_2x2(h)
+
+        # dropout
+        self.keep_prob = tf.placeholder(tf.float32)
 
         # 1st fc layer
-        W_fc1 = weight_variable([self.ecg.nfeatures*32, 1024], 'W_fc1')
-        b_fc1 = bias_variable([1024], 'b_fc1')
-        h_conv2_flat = tf.reshape(h_conv2, [-1, self.ecg.nfeatures*32])
-        h_fc1 = tf.nn.relu(tf.matmul(h_conv2_flat, W_fc1) + b_fc1)
-        self.keep_prob = tf.placeholder(tf.float32)
-        h_fc1_drop = tf.nn.dropout(h_fc1, self.keep_prob)
+        with tf.name_scope('fc1') as scope:
+            shape = int(np.prod(self.conv5.get_shape()[1:]))
+            conv5_flat = tf.reshape(self.conv5, [-1, shape])
+            # w = weight_variable([self.ecg.nfeatures*64, 1024])
+            w = weight_variable([shape, 1024])
+            b = bias_variable([1024])
+            
+            h = tf.nn.relu(tf.matmul(conv5_flat, w) + b)
+            self.fc1 = tf.nn.dropout(h, self.keep_prob)
 
         # 2nd fc layer
-        W_fc2 = weight_variable([1024, self.ecg.nclasses], 'W_fc2')
-        b_fc2 = bias_variable([self.ecg.nclasses], 'b_fc2')
+        with tf.name_scope('fc2') as scope:
+            w = weight_variable([1024, 512])
+            b = bias_variable([512])
+            h = tf.nn.relu(tf.matmul(self.fc1, w) + b)
+            self.fc2 = tf.nn.dropout(h, self.keep_prob)
 
-        # loss
-        self.logits = tf.matmul(h_fc1_drop, W_fc2) + b_fc2
-        entropy = tf.nn.softmax_cross_entropy_with_logits(self.logits, self.Y, name='loss')
-        self.loss = tf.reduce_mean(entropy)
+        # 3rd fc layer
+        with tf.name_scope('fc3') as scope:
+            w = weight_variable([512, self.ecg.nclasses])
+            b = bias_variable([self.ecg.nclasses])
+            self.logits = tf.matmul(self.fc2, w) + b
+            entropy = tf.nn.softmax_cross_entropy_with_logits(self.logits, self.Y, name='loss')
+            self.loss = tf.reduce_mean(entropy)
 
         # optimizer
         self.optimizer = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss)
@@ -78,8 +111,7 @@ class CNN:
         Init the tensorflow session and path to save model
         """
         self.sess = tf.Session()
-        # TODO: 'models/b.ckpt'
-        self.save_path = 'tmp/iir.ckpt'
+        self.save_path = 'tmp/alex.ckpt'
         self.id_to_class_name = {0: 'Normal', 1: 'AF', 2: 'Other', 3: 'Noise'}
 
     def train(self):
