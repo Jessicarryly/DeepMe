@@ -25,6 +25,17 @@ def conv2d(x, W):
 def max_pool_2x2(x, name='pool'):
     return tf.nn.max_pool(x, ksize=[1, 2, 1, 1], strides=[1, 2, 1, 1], padding='SAME', name=name)
 
+def variable_summaries(var, name):
+    with tf.name_scope(name):
+        mean = tf.reduce_mean(var)
+        tf.summary.scalar('mean', mean)
+        with tf.name_scope('stddev'):
+            stddev = tf.sqrt(tf.reduce_mean(tf.square(var - mean)))
+        tf.summary.scalar('stddev', stddev)
+        tf.summary.scalar('max', tf.reduce_max(var))
+        tf.summary.scalar('min', tf.reduce_min(var))
+        tf.summary.histogram('histogram', var)
+
 def load_data(path, csvfile, percent=100, all_feature=False, length=2048, ids={}):
     """
     Load all data from the current path, with label save in .csv file

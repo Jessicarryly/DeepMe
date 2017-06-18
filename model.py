@@ -1,7 +1,7 @@
 import tensorflow as tf
 import numpy as np
 from abc import ABCMeta, abstractmethod
-from utils import weight_variable, bias_variable, conv2d, max_pool_2x2
+from utils import weight_variable, bias_variable, conv2d, max_pool_2x2, variable_summaries
 
 """
 The cnn architecture, include
@@ -27,16 +27,56 @@ class LinearRegression(Model):
          # cnn layer
         W = tf.Variable(tf.truncated_normal([feature, classes]), name='Weights')
         b = tf.Variable(tf.zeros(classes), name='biases')
-        tf.summary.histogram('weight', W)
-        tf.summary.histogram('bias', b)
 
         # loss
         logits = tf.matmul(X, W) + b
         entropy = tf.nn.softmax_cross_entropy_with_logits(logits, Y, name='loss')
         loss = tf.reduce_mean(entropy)
-        tf.summary.histogram('loss', loss)
+        variable_summaries(loss, 'loss')
 
         return logits, loss, keep_prob, "linear"
+
+class SimpleCNN(Model):
+
+    def model(self, X, Y):
+        feature = int(np.prod(X.get_shape()[1:]))
+        classes = int(np.prod(Y.get_shape()[1:]))
+        x_image = tf.reshape(X, [-1, feature, 1, 1])
+
+        # 1st conv layer
+        with tf.name_scope('conv1'):
+            W = weight_variable([5, 1, 1, 32])
+            b = bias_variable([32])
+            h = tf.nn.relu(conv2d(x_image, W) + b)
+            conv1 = max_pool_2x2(h)
+
+        # 2nd conv layer
+        with tf.name_scope('conv2'):
+            W = weight_variable([5, 1, 32, 64])
+            b = bias_variable([64])
+            conv2 = tf.nn.relu(conv2d(conv1, W) + b)
+
+        keep_prob = tf.placeholder(tf.float32)
+
+        # 1st fc layer
+        with tf.name_scope('fc1'):
+            shape = int(np.prod(conv2.get_shape()[1:]))
+            W = weight_variable([shape, 1024])
+            b = bias_variable([1024])
+            conv2_flat = tf.reshape(conv2, [-1, shape])
+            h = tf.nn.relu(tf.matmul(conv2_flat, W) + b)
+            fc1 = tf.nn.dropout(h, keep_prob)
+
+        # 2nd fc layer
+        with tf.name_scope('fc2'):
+            W = weight_variable([1024, classes])
+            b = bias_variable([classes])
+            logits = tf.matmul(fc1, W) + b
+            entropy = tf.nn.softmax_cross_entropy_with_logits(logits, Y, name='loss')
+            loss = tf.reduce_mean(entropy)
+            variable_summaries(loss, 'loss')
+        
+        return logits, loss, keep_prob, 'cnn'
 
     
 # class AlexNet(Model):

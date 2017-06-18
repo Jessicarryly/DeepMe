@@ -40,10 +40,9 @@ class Solver:
         # Input to network, the number of feature is the power of 2
         self.X = tf.placeholder(tf.float32, [None, self.ecg.nfeatures], name='X_placeholder')
         self.Y = tf.placeholder(tf.float32, [None, self.ecg.nclasses], name='Y_placeholder')
-        x_image = tf.reshape(self.X, [-1, self.ecg.nfeatures, 1, 1])
 
         # init layer and model name
-        self.logits, self.loss, self.keep_prob, name = LinearRegression().model(self.X, self.Y)
+        self.logits, self.loss, self.keep_prob, name = SimpleCNN().model(self.X, self.Y)
         self.name = name
 
         # optimizer
@@ -79,11 +78,12 @@ class Solver:
         # train
         for i in range(self.epochs):
             loss = 0
-            for _ in range(batches):
+            for j in range(batches):
                 X_batch, Y_batch = self.ecg.get_train_batch(self.batch_size)
                 _, loss_batch, summary = self.sess.run([self.optimizer, self.loss, merged], feed_dict={self.X: X_batch, self.Y: Y_batch, self.keep_prob: self.dropout})
                 loss += loss_batch
-                writter.add_summary(summary)
+                step = i * self.epochs + j
+                writter.add_summary(summary, step)
             print 'Average loss {0}: {1}'.format(i, loss/batches)
 
         # training finished
@@ -162,7 +162,8 @@ class Solver:
             X = loadmat(file)['val'][:, 0:2048]
             # restore save model
             saver = tf.train.Saver()
-            saver.restore(self.sess, self.save_path)
+            save_path = "model/{0}.ckpt".format(self.name)
+            saver.restore(self.sess, save_path)
 
             # run the test
             logit = self.sess.run(self.logits, feed_dict={self.X: X, self.keep_prob: 1})
