@@ -68,3 +68,10 @@ v0.3: Add lowpass FIR filter with cutoff frequency of 40 Hz, default input size 
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
+
+Linear Regression
+Total train time 8.45653510094
+Accuracy in the validation set is 0.260074066022
+Testing time 13.9749529362
+
+SimpleCNN
