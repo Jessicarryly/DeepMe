@@ -75,3 +75,8 @@ Accuracy in the validation set is 0.260074066022
 Testing time 13.9749529362
 
 SimpleCNN
+Total train time 3017.16695285
+Accuracy in the validation set is 0.935226413798
+Testing time 28.5029058456
+
+AlexNet

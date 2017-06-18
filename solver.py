@@ -33,8 +33,8 @@ class Solver:
 
     def __init_layer(self):
         """
-        setup all the layer needed, following the architecture
-        [affine - relu - maxpool] - [affine - relu - maxpool] - [fc] - [softmax]
+        setup all the layer needed, using the class from model.py
+        Can easily switch back and fort between model
         """
 
         # Input to network, the number of feature is the power of 2
@@ -42,11 +42,11 @@ class Solver:
         self.Y = tf.placeholder(tf.float32, [None, self.ecg.nclasses], name='Y_placeholder')
 
         # init layer and model name
-        self.logits, self.loss, self.keep_prob, name = SimpleCNN().model(self.X, self.Y)
+        self.logits, self.loss, self.keep_prob, name = AlexNet().model(self.X, self.Y)
         self.name = name
 
         # optimizer
-        self.optimizer = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss)
+        self.optimizer = tf.train.GradientDescentOptimizer(self.learning_rate).minimize(self.loss)
 
     def __init_session(self):
         """
@@ -66,10 +66,9 @@ class Solver:
         # setup before train
         start = time.time() # measure training time
 
-        # visualize the model
+        # visualize the train model
         merged = tf.summary.merge_all()
         writter = tf.summary.FileWriter('graphs/{0}/train'.format(self.name), self.sess.graph) 
-
 
         self.sess.run(tf.global_variables_initializer()) # init all variables
         batches = self.ecg.ntrains / self.batch_size # get the number of batches for each epoch
@@ -104,6 +103,10 @@ class Solver:
         print 'start testing the cnn'
         start = time.time()
 
+        # visualize the test model
+        merged = tf.summary.merge_all()
+        writter = tf.summary.FileWriter('graphs/{0}/test'.format(self.name), self.sess.graph) 
+
         # restore saved model
         saver = tf.train.Saver()
         save_path = "model/{0}.ckpt".format(self.name)
@@ -118,12 +121,12 @@ class Solver:
         for i in range(self.ecg.ntests):
             # run single forward pass
             X_test, Y_test = self.ecg.get_test(i)
-            print X_test.shape
+
             # no drop out in testing
-            loss, logit = self.sess.run([self.loss, self.logits], feed_dict={self.X: X_test, self.Y: Y_test, self.keep_prob: 1})
+            loss, logit, summary = self.sess.run([self.loss, self.logits, merged], feed_dict={self.X: X_test, self.Y: Y_test, self.keep_prob: 1})
 
             # get the prediction
-            print logit
+            writter.add_summary(summary, i)
             probs = self.sess.run(tf.nn.softmax(logit))
             pred = self.sess.run(tf.argmax(probs, 1))[0]
 
@@ -133,10 +136,9 @@ class Solver:
             if pred == correct:
                 corrects[pred] += 1
 
-            if verbose and i % sample_every == 0:
+            if verbose:
                 plot(X_test)
-                print 'True label is {0}'.format(self.id_to_class_name[correct])
-                print 'The model predicts', self.id_to_class_name[pred]
+                print 'True label is {0}'.format(self.id_to_class_name[correct]), 'The model predicts', self.id_to_class_name[pred]
 
         # calculate the accuracy, base Scoring part at https://physionet.org/challenge/2017/#preparing
         fn = 2.0 * corrects[0] / (total[0] + self.ecg.N)

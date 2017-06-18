@@ -10,6 +10,11 @@ The cnn architecture, include
 - Alexnet
 """
 class Model(object):
+    """
+    Provide the model adapt to the input X and Y
+    Return logits, loss, keep_prob for tensorflow sess
+    name to store the model and draw summary graphs
+    """
 
     __metaclass__ = ABCMeta
 
@@ -18,6 +23,9 @@ class Model(object):
         pass
     
 class LinearRegression(Model):
+    """
+    Provide the simple Linear regression model, only has 1 linear function
+    """
 
     def model(self, X, Y):
         feature = int(np.prod(X.get_shape()[1:]))
@@ -25,8 +33,8 @@ class LinearRegression(Model):
         keep_prob = tf.placeholder(tf.float32)
 
          # cnn layer
-        W = tf.Variable(tf.truncated_normal([feature, classes]), name='Weights')
-        b = tf.Variable(tf.zeros(classes), name='biases')
+        W = weight_variable([feature, classes])
+        b = bias_variable([classes])
 
         # loss
         logits = tf.matmul(X, W) + b
@@ -37,6 +45,10 @@ class LinearRegression(Model):
         return logits, loss, keep_prob, "linear"
 
 class SimpleCNN(Model):
+    """
+    Provide a simple CNN model with architecture:
+    [affine - relu -pool] - [affine - relu] - 2*[fc] - [softmax]
+    """
 
     def model(self, X, Y):
         feature = int(np.prod(X.get_shape()[1:]))
@@ -80,6 +92,10 @@ class SimpleCNN(Model):
 
     
 class AlexNet(Model):
+    """
+    Provide AlextNet model
+    5*[conv-relu] - 3*[fc] - [soltmax]
+    """
 
     def model(self, X, Y):
         feature = int(np.prod(X.get_shape()[1:]))
