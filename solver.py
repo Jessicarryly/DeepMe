@@ -137,8 +137,8 @@ class Solver:
                 corrects[pred] += 1
 
             if verbose:
-                plot(X_test)
-                print 'True label is {0}'.format(self.id_to_class_name[correct]), 'The model predicts', self.id_to_class_name[pred]
+                # plot(X_test)
+                print 'True label is {0}'.format(self.id_to_class_name[correct]), '- The model predicts', self.id_to_class_name[pred]
 
         # calculate the accuracy, base Scoring part at https://physionet.org/challenge/2017/#preparing
         fn = 2.0 * corrects[0] / (total[0] + self.ecg.N)
@@ -175,7 +175,7 @@ class Solver:
             pred = self.sess.run(tf.argmax(probs, 1))[0]
 
             # visualize data
-            plot(X)
+            # plot(X)
             print 'The model predicts', self.id_to_class_name[pred]
         except IOError:
             print 'No such file {0}'.format(file)

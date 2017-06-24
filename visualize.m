@@ -1,6 +1,6 @@
 % ECG recordings were sampled as 300 Hz and they have been band pass filtered by the AliveCor device
 clear all; close all; clc;
-file = 'validation/A00011';
+file = 'training2017/A00001';
 fs = 300;
 N = 2048;
 data = load(file); % load struct from .mat file
