@@ -150,7 +150,7 @@ class AlexNet(Model):
         # 1st fc layer
         with tf.name_scope('fc1') as scope:
             shape = int(np.prod(conv5.get_shape()[1:]))
-            print 'shape: ', shape
+            print('shape: ', shape)
             conv5_flat = tf.reshape(conv5, [-1, shape])
             w = weight_variable([shape, 1024])
             b = bias_variable([1024])
@@ -174,7 +174,7 @@ class AlexNet(Model):
             b = bias_variable([classes])
             logits = tf.matmul(fc2, w) + b
             # print "logits shape: ", logits.get_shape()
-            entropy = tf.nn.softmax_cross_entropy_with_logits(logits, Y, name='loss')
+            entropy = tf.nn.softmax_cross_entropy_with_logits(labels=Y, logits=logits, name='loss')
             loss = tf.reduce_mean(entropy)
             variable_summaries(loss, 'loss')
 

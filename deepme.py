@@ -30,4 +30,4 @@ if __name__ == '__main__':
             solver = Solver()
             solver.predict(mode)
     else:
-        print "usage: python deepme.py <option>"
+        print("usage: python deepme.py <option>")

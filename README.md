@@ -46,7 +46,9 @@ v0.2: [affine - relu -pool] - [affine - relu] - [fc] - softmax
 v0.3: Add lowpass FIR filter with cutoff frequency of 40 Hz, default input size is 2^11 = 2048 to boost computation efficiency
 <img src=screenshot/v0.3.png width='512' alt='image' />
 
+When running with on GeForce GT 750M
 
+<img src=screenshot/gpu.png width='256' alt='image' />
 
 ## Inspiration
 

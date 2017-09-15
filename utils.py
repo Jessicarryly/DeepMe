@@ -6,8 +6,8 @@ from scipy.fftpack import fft
 from scipy.signal import butter, firwin, lfilter
 import tensorflow as tf
 import numpy as np
-import matplotlib.pyplot as plt
-import gnuplotlib as gp
+# import matplotlib.pyplot as plt
+# import gnuplotlib as gp
 from os.path import join
 from csv import reader
 
@@ -48,7 +48,7 @@ def load_data(path, csvfile, percent=100, all_feature=False, length=2048, ids={}
     """
     X = []
     Y = []
-    with open(join(path, csvfile), 'rb') as file:
+    with open(join(path, csvfile), newline='') as file:
         ecgreader = reader(file, delimiter=',')
         for row in ecgreader:
             val = loadmat(join(path, row[0]))['val']
@@ -116,10 +116,10 @@ def plot_mat(file, title, path, len=2048):
     Plot the data from .mat file to terminal
     """
     val = loadmat(join(path, file))['val'][:, 0:len]
-    gp.plot(val, title=title, xlabel='Time (s)', ylabel='Amplitude (mV)', _with='lines', terminal='dumb 80, 40', unset='grid')
+    # gp.plot(val, title=title, xlabel='Time (s)', ylabel='Amplitude (mV)', _with='lines', terminal='dumb 80, 40', unset='grid')
 
 def plot(X, len=1200):
     """
     Plot the data of X to terminal
     """
-    gp.plot(X[:, 0:len], xlabel='Time (s)', ylabel='Amplitude (mV)', _with='lines', terminal='dumb 80, 40', unset='grid')
+    # gp.plot(X[:, 0:len], xlabel='Time (s)', ylabel='Amplitude (mV)', _with='lines', terminal='dumb 80, 40', unset='grid')

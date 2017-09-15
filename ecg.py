@@ -64,9 +64,9 @@ class ECG:
 
         # plot 4 example graph in the dataset
         if self.verbose:
-            print 'Train ', self.X_train.shape
-            print 'Test ', self.X_test.shape
-            print 'Label each', count
+            print('Train ', self.X_train.shape)
+            print('Test ', self.X_test.shape)
+            print('Label each', count)
             self.__graph_sample_data()
 
     def __setup_data(self, path):

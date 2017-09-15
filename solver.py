@@ -18,7 +18,7 @@ class Solver:
          dropout: reduce overfitting
          develop: if the model is being developed, use a smaller set of data and epochs
         """
-        print 'setup convolution neural network'
+        print('setup convolution neural network')
         self.ecg = ecg
         self.learning_rate = learning_rate
         if develop:
@@ -61,7 +61,7 @@ class Solver:
         start training the model using the setting in init
         """
 
-        print 'start training the cnn'
+        print('start training the cnn')
 
         # setup before train
         start = time.time() # measure training time
@@ -71,7 +71,7 @@ class Solver:
         writter = tf.summary.FileWriter('graphs/{0}/train'.format(self.name), self.sess.graph) 
 
         self.sess.run(tf.global_variables_initializer()) # init all variables
-        batches = self.ecg.ntrains / self.batch_size # get the number of batches for each epoch
+        batches = int(self.ecg.ntrains / self.batch_size) # get the number of batches for each epoch
         saver = tf.train.Saver()
 
         # train
@@ -83,11 +83,11 @@ class Solver:
                 loss += loss_batch
                 step = i * self.epochs + j
                 writter.add_summary(summary, step)
-            print 'Average loss {0}: {1}'.format(i, loss/batches)
+            print('Average loss {0}: {1}'.format(i, loss/batches))
 
         # training finished
-        print 'Total train time {0}'.format(time.time() - start)
-        print 'Optimizer finished'
+        print('Total train time {0}'.format(time.time() - start))
+        print('Optimizer finished')
 
         # Save the sess
         save_path = "model/{0}.ckpt".format(self.name)
@@ -100,7 +100,7 @@ class Solver:
         sample_every: print the result of the model every x time
         verbose: should print result to terminals
         """
-        print 'start testing the cnn'
+        print('start testing the cnn')
         start = time.time()
 
         # visualize the test model
@@ -138,7 +138,7 @@ class Solver:
 
             if verbose:
                 # plot(X_test)
-                print 'True label is {0}'.format(self.id_to_class_name[correct]), '- The model predicts', self.id_to_class_name[pred]
+                print('True label is {0}'.format(self.id_to_class_name[correct]), '- The model predicts', self.id_to_class_name[pred])
 
         # calculate the accuracy, base Scoring part at https://physionet.org/challenge/2017/#preparing
         fn = 2.0 * corrects[0] / (total[0] + self.ecg.N)
@@ -146,8 +146,8 @@ class Solver:
         fo = 2.0 * corrects[2] / (total[2] + self.ecg.O)
         fp = 2.0 * corrects[3] / (total[3] + self.ecg.P)
         f = (fn + fa + fo + fp) / 4.0
-        print 'Accuracy in the validation set is {0}'.format(f)
-        print 'Testing time {0}'.format(time.time() - start)
+        print('Accuracy in the validation set is {0}'.format(f))
+        print('Testing time {0}'.format(time.time() - start))
 
     def predict(self, file):
         """
@@ -156,7 +156,7 @@ class Solver:
 
         # ensure correct file format
         if not file.endswith('.mat'):
-            print 'Incorrect file format'
+            print('Incorrect file format')
             return
 
         try:
@@ -176,6 +176,6 @@ class Solver:
 
             # visualize data
             # plot(X)
-            print 'The model predicts', self.id_to_class_name[pred]
+            print('The model predicts', self.id_to_class_name[pred])
         except IOError:
-            print 'No such file {0}'.format(file)
+            print('No such file {0}'.format(file))

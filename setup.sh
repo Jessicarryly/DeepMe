@@ -5,4 +5,4 @@ unzip sample2017.zip
 mv sample/validation validation
 rm sample2017.zip
 rm training2017.zip
-pip install -r requirements.txt
+# pip install -r requirements.txt
